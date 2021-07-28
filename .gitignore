@@ -1,0 +1,10 @@
+#Ignore Service Account File
+backend-service-account.json
+
+.idea
+.idea/*
+target
+target/*
+target/classes/*
+target/classes/src/*
+target/classes/src
