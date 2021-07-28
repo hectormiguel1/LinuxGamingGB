@@ -1,74 +1,69 @@
 package src.Controllers;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import src.Exceptions.Auth.UserAlreadyExistsException;
+import src.Exceptions.Auth.UsernamePasswordMismatchException;
+import src.Models.AuthToken;
+import src.Models.LoginRequest;
+import src.Models.RegisterRequest;
 import src.Models.User;
+import src.Services.TokenService;
 import src.Services.UserService;
-import org.springframework.web.bind.annotation.RestController;
 
-/**
- * Class UserController
- */
+import java.util.concurrent.ExecutionException;
+
 @RestController
+@RequestMapping("/auth")
+@CrossOrigin
 public class UserController {
 
-  //
-  // Fields
-  //
+  private final UserService userService;
+  private final Logger logger = LoggerFactory.getLogger(UserController.class);
 
-  private UserService userService;
-  
-  //
-  // Constructors
-  //
-  public UserController () { };
-  
-  //
-  // Methods
-  //
-
-
-  //
-  // Accessor methods
-  //
+  @Autowired
+  public UserController (UserService userService, TokenService tokenService) {
+    this.userService = userService;
+    logger.info("User Controller: UP");
+  };
 
   /**
-   * Set the value of userService
-   * @param newVar the new value of userService
+   * Function used to authenticate a user.
+   * @param loginRequest: Login Request Object, contains email and password(salted)
+   * @return Response Entity with Authentication Token is successful, Exceptions are thrown otherwise.
+   * @throws UsernamePasswordMismatchException When the provided username and password dont match to what is in server.
+   * @throws ExecutionException When connection to database fails.
+   * @throws InterruptedException When connection to database is interrupted.
    */
-  public void setUserService (UserService newVar) {
-    userService = newVar;
-  }
-
-  /**
-   * Get the value of userService
-   * @return the value of userService
-   */
-  public UserService getUserService () {
-    return userService;
-  }
-
-  //
-  // Other methods
-  //
-
-  /**
-   * @return       Boolean
-   * @param        email
-   * @param        password Password is the salted representation.
-   */
-  public Boolean login(String email, String password)
-  {
-    return null;
+  @PostMapping
+  @CrossOrigin
+  public ResponseEntity<AuthToken> login(@RequestBody LoginRequest loginRequest)
+          throws UsernamePasswordMismatchException, ExecutionException, InterruptedException {
+    return new ResponseEntity<>(
+         userService.loginUser(loginRequest.getEmail(), loginRequest.getPassword()), HttpStatus.OK
+    );
   }
 
 
   /**
-   * @return       Boolean
-   * @param        newUser
-   * @param        password this will be the salted version of the password.
+   * Function handles register requests on /auth/register
+   * @param registerRequest Request containing new user to register
+   * @return Response Entity containing Authentication Token if successful, Exceptions are thrown otherwise.
+   * @throws UserAlreadyExistsException Thrown when attempting to register a user that already exists.
+   * @throws ExecutionException Thrown when connection to database fails.
+   * @throws InterruptedException Thrown when connection to database is interrupted.
    */
-  public Boolean register(User newUser, String password)
-  {
-    return null;
+  @PostMapping("/register")
+  @CrossOrigin
+  public ResponseEntity<AuthToken> register(@RequestBody RegisterRequest registerRequest)
+          throws UserAlreadyExistsException, ExecutionException, InterruptedException {
+    return new ResponseEntity<>(
+            userService.registerNewUser(registerRequest.user()), HttpStatus.OK
+    );
   }
 
 
