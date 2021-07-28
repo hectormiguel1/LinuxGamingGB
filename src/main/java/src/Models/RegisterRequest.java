@@ -1,6 +1,6 @@
 package src.Models;
 
-public record RegisterRequest(User user) {
+public record RegisterRequest(String email, String displayName, String password) {
 
 }
 

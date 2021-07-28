@@ -1,11 +1,11 @@
 package src.Services;
 
-import com.google.firebase.database.core.Repo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import src.Exceptions.Auth.UserAlreadyExistsException;
 import src.Exceptions.Auth.UserNotFoundException;
-import src.Exceptions.Auth.UsernamePasswordMismatchException;
+import src.Exceptions.Auth.EmailPasswordMismatchException;
 import src.Exceptions.Data.GameAlreadyExistsException;
 import src.Exceptions.Data.GameNotFoundException;
 import src.Models.Game;
@@ -22,6 +22,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
@@ -38,6 +39,7 @@ public class StorageService {
     private final String UserCollection = "Users";
     private final String GameCollection = "Games";
     private final String ReportCollection = "Reports";
+    private final HashingService hashingService;
 
     //
     // Fields
@@ -47,7 +49,9 @@ public class StorageService {
     //
     // Constructors
     //
-    public StorageService () {
+    @Autowired
+    public StorageService (HashingService hashingService) {
+        this.hashingService = hashingService;
         logger.info("Current Working Directory: " + System.getProperty("user.dir"));
         try {
             InputStream serviceAccount = new FileInputStream(PathToServiceAccountCredentials);
@@ -66,53 +70,58 @@ public class StorageService {
     }
 
     /**
-     * Creates a new user on the persistent database. Checks if the email has already been registered before registering the user.
-     * @param newUser: New user to be registered.
-     * @return User: Returns the new user stored on the db.
+     * Creates a new newUser on the persistent database. Checks if the email has already been registered before registering the newUser.
+     * @param newUser: New newUser to be registered.
+     * @return User: Returns the new newUser stored on the db.
      * @throws ExecutionException: Thrown when the call to get the data from db fails.
      * @throws InterruptedException: Thrown when the call to get the data from the db fails.
-     * @throws UserAlreadyExistsException: Thrown when attempting to register a user to the db that already exists.
+     * @throws UserAlreadyExistsException: Thrown when attempting to register a newUser to the db that already exists.
      */
     public User createNewUser(User newUser) throws ExecutionException, InterruptedException, UserAlreadyExistsException {
-        //Check if the user already exists in the db.
+        //Check if the newUser already exists in the db.
         var userSnapshot = persistentDB.collection(UserCollection).whereEqualTo("email", newUser.getEmail()).get().get();
-        //if the user already exists, then throw the exception.
+        //if the newUser already exists, then throw the exception.
         if(userSnapshot.size() > 0) {
             throw new UserAlreadyExistsException(newUser);
         }
-        //Otherwise make request for the user to be stored in the db and wait for response from db.
-        var response = persistentDB.collection(UserCollection).document(newUser.getUID()).set(newUser).get();
+        //Otherwise make request for the newUser to be stored in the db and wait for response from db.
+        var response = persistentDB.collection(UserCollection).document(newUser.getUID().toString()).set(newUser).get();
 
-        logger.info("Wrote new user, operation was completed on: " + response.getUpdateTime());
+        logger.info("Wrote new newUser, operation was completed on: " + response.getUpdateTime());
 
-        //Return the new user stored on the db.
-        return persistentDB.collection(UserCollection).document(newUser.getUID()).get().get().toObject(User.class);
+        //Return the new newUser stored on the db.
+        return persistentDB.collection(UserCollection).document(newUser.getUID().toString()).get().get().toObject(User.class);
     }
 
     /**
-     * Gets a user from the persistent Database.
-     * Checks that the user exists, and that the provided password matches the one provided.
-     * @param userEmail: Email of the desired user.
-     * @param password: Password of the desired user.
+     * Gets a newUser from the persistent Database.
+     * Checks that the newUser exists, and that the provided password matches the one provided.
+     * @param userEmail: Email of the desired newUser.
+     * @param password: Password of the desired newUser.
      * @return User object that matches the provided email and password.
      * @throws ExecutionException: Thrown when attempting to get db data fails.
      * @throws InterruptedException: Thrown when attempting to connect to db fails.
-     * @throws UsernamePasswordMismatchException: Thrown if there are not results that match the provided email and password combo.
+     * @throws EmailPasswordMismatchException : Thrown if there are not results that match the provided email and password combo.
      */
     public User getUser(String userEmail, String password) throws ExecutionException, InterruptedException,
-            UsernamePasswordMismatchException {
-        //Verifies that a user with provided email exits on the server.
+            EmailPasswordMismatchException, UserNotFoundException {
+        //Verifies that a newUser with provided email exits on the server.
         var userSnapshot = persistentDB.collection(UserCollection)
                 .whereEqualTo("email", userEmail)
-                .whereEqualTo("password", password)
                 .get().get();
         if(userSnapshot.isEmpty())  {
-            throw new UsernamePasswordMismatchException();
+            throw new UserNotFoundException(userEmail);
         }
+        User userObject = userSnapshot.toObjects(User.class).get(0);
+        var confirmedPassword = hashingService.verifyPassword(password.toCharArray(), userObject.getSalt().getBytes(), userObject.getPassword().getBytes());
+        if(confirmedPassword) {
 
-        logger.info("Successfully found user with email: " + userEmail + " password verification success");
-        //There will ever only be on user with the provided email and password.
-        return userSnapshot.toObjects(User.class).get(0);
+            logger.info("Successfully found user with email: " + userEmail + " password verification success");
+            //There will ever only be on newUser with the provided email and password.
+            return userObject;
+        } else {
+            throw new EmailPasswordMismatchException();
+        }
     }
 
     /**

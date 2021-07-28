@@ -33,7 +33,7 @@ public class AuthToken {
     public AuthToken(String UUID) {
         this.token = java.util.UUID.fromString(UUID);
         this.accessLevel = AccessLevel.NewUser;
-        expires = null;
+        expires = LocalDateTime.now();
     }
 
     public LocalDateTime getExpires() {

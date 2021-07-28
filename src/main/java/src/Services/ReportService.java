@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import src.Exceptions.Auth.InvalidTokenException;
 import src.Exceptions.Auth.TokenNotFoundException;
+import src.Exceptions.Data.GameNotFoundException;
 import src.Models.AuthToken;
 import src.Models.Privilages.RequestType;
 import src.Models.Report;
@@ -40,12 +41,14 @@ public class ReportService {
      * @throws ExecutionException: When the connection to the DB fails.
      * @throws InterruptedException: When the connection to the DB is interrupted.
      * @throws InvalidTokenException: When the passed token is not allowed to make this request.
+     * @throws GameNotFoundException: When trying to add a report for a game that does not exists
      */
     public Boolean addReport(Report newReport, AuthToken userToken) throws TokenNotFoundException,
-            ExecutionException, InterruptedException, InvalidTokenException {
+            ExecutionException, InterruptedException, InvalidTokenException, GameNotFoundException {
         logger.info("Attempting to add new report to Game: " + newReport.getGameUID() + ", with AuthToken: " + userToken.getToken().toString());
         //Verifies that the token is valid before doing request to database.
         if(tokenService.validateToken(userToken, RequestType.Post)) {
+            storageService.getGame(newReport.getGameUID());
             return storageService.addReport(newReport);
         }
         return false;
@@ -54,7 +57,7 @@ public class ReportService {
     /**
      * Gets all the Reports for the given game.
      * @param gameUID: UID of the desired game.
-     * @param userToken: Token of the desired user.
+     * @param userToken: Token of the desired newUser.
      * @return List<Receipt>:  List of receipts for the given game, empty list is nothing is found.
      * @throws TokenNotFoundException: Thrown when the token can not found or validated.
      * @throws ExecutionException: Thrown when the connection to the database fails.

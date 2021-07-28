@@ -7,7 +7,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import src.Exceptions.Auth.UserAlreadyExistsException;
-import src.Exceptions.Auth.UsernamePasswordMismatchException;
+import src.Exceptions.Auth.EmailPasswordMismatchException;
+import src.Exceptions.Auth.UserNotFoundException;
 import src.Models.AuthToken;
 import src.Models.LoginRequest;
 import src.Models.RegisterRequest;
@@ -32,17 +33,18 @@ public class UserController {
   };
 
   /**
-   * Function used to authenticate a user.
+   * Function used to authenticate a newUser.
    * @param loginRequest: Login Request Object, contains email and password(salted)
    * @return Response Entity with Authentication Token is successful, Exceptions are thrown otherwise.
-   * @throws UsernamePasswordMismatchException When the provided username and password dont match to what is in server.
+   * @throws EmailPasswordMismatchException When the provided username and password dont match to what is in server.
    * @throws ExecutionException When connection to database fails.
    * @throws InterruptedException When connection to database is interrupted.
+   * @throws UserNotFoundException When user could not be found using provided email.
    */
   @PostMapping
   @CrossOrigin
   public ResponseEntity<AuthToken> login(@RequestBody LoginRequest loginRequest)
-          throws UsernamePasswordMismatchException, ExecutionException, InterruptedException {
+          throws EmailPasswordMismatchException, ExecutionException, InterruptedException, UserNotFoundException {
     return new ResponseEntity<>(
          userService.loginUser(loginRequest.getEmail(), loginRequest.getPassword()), HttpStatus.OK
     );
@@ -51,9 +53,9 @@ public class UserController {
 
   /**
    * Function handles register requests on /auth/register
-   * @param registerRequest Request containing new user to register
+   * @param registerRequest Request containing new newUser to register
    * @return Response Entity containing Authentication Token if successful, Exceptions are thrown otherwise.
-   * @throws UserAlreadyExistsException Thrown when attempting to register a user that already exists.
+   * @throws UserAlreadyExistsException Thrown when attempting to register a newUser that already exists.
    * @throws ExecutionException Thrown when connection to database fails.
    * @throws InterruptedException Thrown when connection to database is interrupted.
    */
@@ -61,8 +63,9 @@ public class UserController {
   @CrossOrigin
   public ResponseEntity<AuthToken> register(@RequestBody RegisterRequest registerRequest)
           throws UserAlreadyExistsException, ExecutionException, InterruptedException {
+    User newUser = new User(registerRequest.email(), registerRequest.displayName(), registerRequest.password());
     return new ResponseEntity<>(
-            userService.registerNewUser(registerRequest.user()), HttpStatus.OK
+            userService.registerNewUser(newUser), HttpStatus.OK
     );
   }
 

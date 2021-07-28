@@ -1,5 +1,7 @@
 package src.Models;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import java.util.List;
 import java.util.UUID;
 
@@ -13,9 +15,11 @@ public class Game {
   //
 
   private int currentRating;
+
   private long numOfReports;
   private List<String> tags;
-  private UUID UID;
+  @JsonIgnore
+  private String UID;
   private boolean isNative;
   private String name;
   
@@ -23,7 +27,7 @@ public class Game {
   // Constructors
   //
   public Game () {
-    this.UID = UUID.randomUUID();
+    this.UID = UUID.randomUUID().toString();
   };
 
   public Game(int currentRating, long numOfReports, List<String> tags, boolean isNate, String name) {
@@ -33,6 +37,16 @@ public class Game {
     this.tags = tags;
     this.isNative = isNate;
     this.name = name;
+  }
+
+  public Game(String name, boolean isNative, List<String> tags) {
+    this();
+    this.name = name;
+    this.isNative = isNative;
+    this.tags = tags;
+    numOfReports = 0;
+    currentRating = 0;
+
   }
   
   //
@@ -92,20 +106,21 @@ public class Game {
     return tags;
   }
 
-  /**
-   * Set the value of UID
-   * @param newVar the new value of UID
-   */
-  public void setUID (UUID newVar) {
-    UID = newVar;
-  }
 
   /**
    * Get the value of UID
    * @return the value of UID
    */
-  public UUID getUID () {
+  public String getUID () {
     return UID;
+  }
+
+  public void setUID(String uid) {
+    this.UID = uid;
+  }
+
+  public boolean isNative() {
+    return isNative;
   }
 
   /**

@@ -17,10 +17,10 @@ public class Report {
     private String userUID;
     private String comments;
     @JsonIgnore
-    private final UUID UID;
+    private final String UID;
 
     public Report() {
-        this.UID = UUID.randomUUID();
+        this.UID = UUID.randomUUID().toString();
     }
 
     /**
@@ -32,11 +32,12 @@ public class Report {
      * @param tricks:              List of tricks used to get the game running.
      * @param playTime:            Total play time achieved during testing.
      * @param overallRating:       Rating the
-     * @param userUID
-     * @param comments
+     * @param userUID: User UID which submitted report
+     * @param comments: Additional Comments
      */
     public Report(String gameUID, String systemConfiguration, String wineVer, List<String> tricks, Long playTime,
                   int overallRating, String userUID, String comments) {
+        this();
         this.gameUID = gameUID;
         this.systemConfiguration = systemConfiguration;
         this.wineVer = wineVer;
@@ -45,7 +46,7 @@ public class Report {
         this.overallRating = overallRating;
         this.userUID = userUID;
         this.comments = comments;
-        this.UID = UUID.randomUUID();
+
     }
 
     /**
@@ -198,7 +199,7 @@ public class Report {
      *
      * @return the value of UID
      */
-    public UUID getUID() {
+    public String getUID() {
         return UID;
     }
 
@@ -218,7 +219,7 @@ public class Report {
                 ", overallRating=" + overallRating +
                 ", userUID='" + userUID + '\'' +
                 ", comments='" + comments + '\'' +
-                ", UID='" + UID.toString() + '\'' +
+                ", UID='" + UID + '\'' +
                 '}';
     }
 }

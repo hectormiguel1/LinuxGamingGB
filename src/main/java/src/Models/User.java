@@ -1,5 +1,6 @@
 package src.Models;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import src.Models.Privilages.AccessLevel;
 
 import java.util.UUID;
@@ -9,35 +10,32 @@ import java.util.UUID;
  */
 public class User {
 
-  //
-  // Fields
-  //
-
   private String email;
-  private String UID;
-  private String username;
   private String displayName;
+  @JsonIgnore
+  private String UID;
+  @JsonIgnore
   private AccessLevel accessLevel;
-  /**
-
-   * salted password
-   *    */
-
+  @JsonIgnore
   private String password;
+  @JsonIgnore
+  private String salt;
   
   //
   // Constructors
   //
-  public User () { };
-
-  public User(String email, String username, String displayName) {
-    this.email = email;
-    this.username = username;
-    this.displayName = displayName;
-    this.accessLevel = AccessLevel.NewUser;
+  public User () {
     this.UID = UUID.randomUUID().toString();
+    this.accessLevel = AccessLevel.NewUser;
+  };
+
+  public User(String email, String displayName, String password) {
+    this();
+    this.email = email;
+    this.displayName = displayName;
+    this.password = password;
   }
-  
+
   /**
    * Set the value of email
    * @param newVar the new value of email
@@ -54,36 +52,12 @@ public class User {
     return email;
   }
 
-  /**
-   * Set the value of UID
-   * @param newVar the new value of UID
-   */
-  public void setUID (String newVar) {
-    UID = newVar;
-  }
-
-  /**
-   * Get the value of UID
-   * @return the value of UID
-   */
-  public String getUID () {
+  public String getUID() {
     return UID;
   }
 
-  /**
-   * Set the value of username
-   * @param newVar the new value of username
-   */
-  public void setUsername (String newVar) {
-    username = newVar;
-  }
-
-  /**
-   * Get the value of username
-   * @return the value of username
-   */
-  public String getUsername () {
-    return username;
+  public void setUID(String UID) {
+    this.UID = UID;
   }
 
   /**
@@ -133,14 +107,19 @@ public class User {
   //
   // Other methods
   //
+  public String getSalt() {
+    return salt;
+  }
 
+  public void setSalt(String salt) {
+    this.salt = salt;
+  }
 
   @Override
   public String toString() {
     return "User{" +
             "email='" + email + '\'' +
             ", UID='" + UID + '\'' +
-            ", username='" + username + '\'' +
             ", displayName='" + displayName + '\'' +
             ", accessLevel=" + accessLevel + '\n' +
             '}';

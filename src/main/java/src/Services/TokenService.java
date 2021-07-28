@@ -60,11 +60,17 @@ public class TokenService {
         UUID tokenUUID = token.getToken();
 
         AuthToken serverVerifiedToken = tokenRepository.findById(tokenUUID).orElseThrow(() -> new TokenNotFoundException(token));
-        if(accessLevels.get(serverVerifiedToken.getAccessLevel()).contains(requestType)) {
+        boolean hasRight = false;
+        for(var right : accessLevels.get(serverVerifiedToken.getAccessLevel()))  {
+            if(right.toString().equalsIgnoreCase(requestType.toString())) {
+                hasRight = true;
+            }
+        }
+        if(hasRight) {
             logger.info("Validating Token: " + token.getToken().toString() + ", Valid: " + serverVerifiedToken.getIsValid());
             return serverVerifiedToken.getIsValid();
         }
-        throw new InvalidTokenException(token);
+        throw new InvalidTokenException(serverVerifiedToken);
     }
 
     /**

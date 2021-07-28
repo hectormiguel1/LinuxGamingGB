@@ -41,7 +41,7 @@ public class ExceptionManager {
      */
     @ExceptionHandler({
             UserAlreadyExistsException.class,
-            UsernamePasswordMismatchException.class,
+            EmailPasswordMismatchException.class,
             UserNotFoundException.class
     })
     public ResponseEntity<Object> handleUserExceptions(Exception ex) {
