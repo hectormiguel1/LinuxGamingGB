@@ -11,7 +11,9 @@ import java.util.UUID;
 @Entity
 public class AuthToken {
 
+    @JsonIgnore
     final private LocalDateTime expires;
+
     @Id final private UUID token;
 
     @JsonIgnore
@@ -26,6 +28,12 @@ public class AuthToken {
         this.token = UUID.randomUUID();
         expires = LocalDateTime.now().plusHours(3);
         this.accessLevel = accessLevel;
+    }
+
+    public AuthToken(String UUID) {
+        this.token = java.util.UUID.fromString(UUID);
+        this.accessLevel = AccessLevel.NewUser;
+        expires = null;
     }
 
     public LocalDateTime getExpires() {

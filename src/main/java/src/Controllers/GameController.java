@@ -1,120 +1,123 @@
 package src.Controllers;
 
+import org.hibernate.annotations.Check;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import src.Exceptions.Auth.InvalidTokenException;
+import src.Exceptions.Auth.TokenNotFoundException;
+import src.Exceptions.Data.GameAlreadyExistsException;
+import src.Exceptions.Data.UnfulfilledRequestException;
 import src.Models.Game;
 import src.Models.Report;
 import src.Services.GameService;
 import src.Services.ReportService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.RestController;
+import src.Services.TokenService;
 
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 
-/**
- * Class GameController
- */
 @RestController
+@RequestMapping("/games")
+@CrossOrigin
 public class GameController {
 
-  //
-  // Fields
-  //
-
-  private GameService gameService;
-  private ReportService reportService;
+  private final GameService gameService;
+  private final ReportService reportService;
+  private final TokenService tokenService;
   private final Logger logger = LoggerFactory.getLogger(GameController.class);
-  
-  //
-  // Constructors
-  //
+  private final String Auth_Token_Header = "Auth-Token";
+
   @Autowired
-  public GameController (GameService gameService, ReportService reportService) {
+  public GameController (GameService gameService, ReportService reportService, TokenService tokenService) {
     this.gameService = gameService;
     this.reportService = reportService;
+    this.tokenService = tokenService;
+    logger.info("Game Controller: UP");
 
   };
-  
-  //
-  // Methods
-  //
-
-
-  //
-  // Accessor methods
-  //
 
   /**
-   * Set the value of gameService
-   * @param newVar the new value of gameService
+   * Function opens endpoint at /games/query and handles request to search the games database with the query string
+   * @param searchString: String to search games for.
+   * @param token: Token used to validate the request.
+   * @return ResponseEntity<List<Game>>: Response entity with list of games found to match the search query.
+   * @throws InvalidTokenException: Thrown when the token passed does not have the right to do the request.
+   * @throws UnfulfilledRequestException: Thrown when the application can not currently handle the request
+   * @throws ExecutionException: Thrown when the connection to the database fails.
+   * @throws InterruptedException: Thrown when the connection to the database fails.
+   * @throws TokenNotFoundException: Thrown when the token is not found or is no longer valid.
+   * @GetMapping: Opens mapping to accept GET requests on the /games/query endpoint.
    */
-  public void setGameService (GameService newVar) {
-    gameService = newVar;
+  @GetMapping("/query")
+  @CrossOrigin
+  public ResponseEntity<List<Game>> search(@RequestBody String searchString, @RequestHeader(Auth_Token_Header) String token)
+          throws InvalidTokenException, UnfulfilledRequestException, ExecutionException, InterruptedException,
+          TokenNotFoundException {
+    return new ResponseEntity<List<Game>>(
+            gameService.searchGame(searchString, tokenService.tokenize(token)), HttpStatus.OK
+    );
   }
 
   /**
-   * Get the value of gameService
-   * @return the value of gameService
+   *Function handles request to add a new game
+   * @param newGame: Game to be added
+   * @param token: Token used to validate the request
+   * @return ResponseEntity: Containing results of request, true for success, exception otherwise.
+   * @throws GameAlreadyExistsException: Thrown when the game already exists.
+   * @throws InvalidTokenException: Thrown when the token does not have the right to do the request.
+   * @throws ExecutionException: Thrown when the connection to database fails.
+   * @throws InterruptedException: Thrown when the connection to database is interrupted.
+   * @throws TokenNotFoundException: Thrown when the token is not found or is no longer valid.
    */
-  public GameService getGameService () {
-    return gameService;
+  @PostMapping
+  @CrossOrigin
+  public ResponseEntity<Object> addNewGame(@RequestBody Game newGame, @RequestHeader(Auth_Token_Header) String token)
+          throws GameAlreadyExistsException, InvalidTokenException, ExecutionException, InterruptedException,
+          TokenNotFoundException {
+    return new ResponseEntity<>(
+            gameService.newGame(newGame, tokenService.tokenize(token)), HttpStatus.CREATED
+    );
   }
 
   /**
-   * Set the value of reportService
-   * @param newVar the new value of reportService
+   * Function handles request to post new reports.
+   * @param newReport New report to be added.
+   * @param token Token used to validate the request.
+   * @return ResponseEntity True if request succeeds, otherwise Exceptions are thrown.
+   * @throws InvalidTokenException Thrown when the token does not have the rights to do the request.
+   * @throws ExecutionException Thrown when the connection to database fails.
+   * @throws InterruptedException Thrown when the connection to database is interrupted.
+   * @throws TokenNotFoundException Thrown when the token is not found or is not valid.
    */
-  public void setReportService (ReportService newVar) {
-    reportService = newVar;
+  @PostMapping("/reports")
+  @CrossOrigin
+  public ResponseEntity<Object> addNewReport(@RequestBody Report newReport, @RequestHeader(Auth_Token_Header) String token)
+          throws InvalidTokenException, ExecutionException, InterruptedException, TokenNotFoundException {
+    return new ResponseEntity<>(
+            reportService.addReport(newReport, tokenService.tokenize(token)), HttpStatus.CREATED
+    );
   }
 
   /**
-   * Get the value of reportService
-   * @return the value of reportService
+   * Handles request to pull all the reports for a give game ID
+   * @param gameUID UID of game to get reports for.
+   * @param token Token used to validate the request
+   * @return Response Entity with List of Reports of the give game, otherwise exceptions are thrown.
+   * @throws InvalidTokenException Thrown when the token does not have the right to do request.
+   * @throws ExecutionException Thrown when the connection to database fails.
+   * @throws InterruptedException Thrown when the connection to database is interrupted.
+   * @throws TokenNotFoundException Thrown when the token is not found or is no longer valid.
    */
-  public ReportService getReportService () {
-    return reportService;
-  }
-
-  //
-  // Other methods
-  //
-
-  /**
-   * @param        searchString
-   */
-  public void search(String searchString)
-  {
-  }
-
-
-  /**
-   * @return       boolean
-   * @param        newGame at start the new game will have no repeorts.
-   */
-  public boolean addNewGame(Game newGame)
-  {
-    return false;
-  }
-
-
-  /**
-   * //Adds new report to a game.
-   * @param        newReport
-   */
-  public void addNewReport(Report newReport)
-  {
-  }
-
-
-  /**
-   * //Returns the reports for a given name.
-   * @return       List<Report>
-   * @param        gameUID
-   */
-  public List<Report> getReports(String gameUID)
-  {
-    return null;
+  @GetMapping("/reports")
+  public ResponseEntity<Object> getReports(@RequestBody String gameUID, @RequestHeader(Auth_Token_Header) String token)
+          throws InvalidTokenException, ExecutionException, InterruptedException, TokenNotFoundException {
+    return new ResponseEntity<>(
+            reportService.getReports(gameUID, tokenService.tokenize(token)), HttpStatus.OK
+    );
   }
 
 

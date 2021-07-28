@@ -20,7 +20,7 @@ import java.util.UUID;
 @Service
 public class TokenService {
 
-    private HashMap<AccessLevel, List<Enum<?>>> accessLevels = new HashMap<>();
+    private final HashMap<AccessLevel, List<Enum<?>>> accessLevels = new HashMap<>();
     {
         accessLevels.put(AccessLevel.NewUser, Arrays.asList(NewUserRights.values()));
         accessLevels.put(AccessLevel.User, Arrays.asList(UserRights.values()));
@@ -65,5 +65,14 @@ public class TokenService {
             return serverVerifiedToken.getIsValid();
         }
         throw new InvalidTokenException(token);
+    }
+
+    /**
+     * Returns a token representation of the UUID string
+     * @param tokenUID: String to convert to token
+     * @return AuthToken: returns Java Object representation of the AuthToken with given UUID.
+     */
+    public AuthToken tokenize(String tokenUID) {
+        return new AuthToken(tokenUID);
     }
 }
