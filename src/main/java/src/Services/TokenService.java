@@ -4,6 +4,7 @@ import antlr.Token;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import src.Exceptions.Auth.InvalidTokenException;
+import src.Exceptions.Auth.OperationNotAllowedException;
 import src.Exceptions.Auth.TokenNotFoundException;
 import src.Models.AuthToken;
 import src.Models.Privilages.*;
@@ -20,17 +21,18 @@ import java.util.UUID;
 @Service
 public class TokenService {
 
-    private final HashMap<AccessLevel, List<Enum<?>>> accessLevels = new HashMap<>();
-    {
+    private final static HashMap<AccessLevel, List<Enum<?>>> accessLevels = new HashMap<>();
+    static {
         accessLevels.put(AccessLevel.NewUser, Arrays.asList(NewUserRights.values()));
         accessLevels.put(AccessLevel.User, Arrays.asList(UserRights.values()));
         accessLevels.put(AccessLevel.Admin, Arrays.asList(AdminRights.values()));
         accessLevels.put(AccessLevel.ServerAdmin, Arrays.asList(ServerAdminRights.values()));
     }
 
-    TokenRepository tokenRepository;
+    private final static Logger logger = LoggerFactory.getLogger(TokenService.class);
 
-    Logger logger = LoggerFactory.getLogger(TokenService.class);
+
+    private final TokenRepository tokenRepository;
 
     @Autowired
     public TokenService(TokenRepository tokenRepository) {
@@ -54,9 +56,9 @@ public class TokenService {
      * @param token: token to be validated.
      * @return Boolean: True of the token is valid, false otherwise.
      * @throws TokenNotFoundException: When the token is not found in the repository.
-     * @throws InvalidTokenException: When the passed token is not authorized to do the request.
+     * @throws OperationNotAllowedException: When the passed token is not authorized to do the request.
      */
-    public Boolean validateToken(AuthToken token, RequestType requestType) throws TokenNotFoundException, InvalidTokenException {
+    public Boolean validateToken(AuthToken token, RequestType requestType) throws TokenNotFoundException, OperationNotAllowedException {
         UUID tokenUUID = token.getToken();
 
         AuthToken serverVerifiedToken = tokenRepository.findById(tokenUUID).orElseThrow(() -> new TokenNotFoundException(token));
@@ -70,7 +72,7 @@ public class TokenService {
             logger.info("Validating Token: " + token.getToken().toString() + ", Valid: " + serverVerifiedToken.getIsValid());
             return serverVerifiedToken.getIsValid();
         }
-        throw new InvalidTokenException(serverVerifiedToken);
+        throw new OperationNotAllowedException();
     }
 
     /**

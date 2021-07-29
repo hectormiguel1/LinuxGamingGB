@@ -18,11 +18,12 @@ import java.util.concurrent.ExecutionException;
  */
 @Service
 public class UserService {
+  private final static Logger logger = LoggerFactory.getLogger(UserService.class);
+
   private final StorageService storageService;
   private final TokenService tokenService;
   private final HashingService hashingService;
-  private final Logger logger = LoggerFactory.getLogger(UserService.class);
-  
+
   @Autowired
   public UserService(StorageService storageService, TokenService tokenService, HashingService hashingService) {
     this.storageService = storageService;
@@ -40,8 +41,8 @@ public class UserService {
    * @throws InterruptedException: When the connecting to the db was interrupted.
    */
   public AuthToken registerNewUser(User newUser) throws UserAlreadyExistsException, ExecutionException, InterruptedException {
-    newUser.setSalt(new String(hashingService.getNextSalt()));
-    newUser.setPassword(new String(hashingService.hashPassword(newUser.getPassword().toCharArray(), newUser.getSalt().getBytes(StandardCharsets.UTF_8))));
+    newUser.setSalt(hashingService.getNextSalt());
+    newUser.setPassword(hashingService.hashPassword(newUser.getPassword().toCharArray(), newUser.getSalt().getBytes()));
     User registeredUser = storageService.createNewUser(newUser);
     logger.info("Registering new User with email: " + newUser.getEmail());
     return tokenService.generateNewToken(registeredUser);

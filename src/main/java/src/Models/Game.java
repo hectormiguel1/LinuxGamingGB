@@ -20,7 +20,7 @@ public class Game {
   private List<String> tags;
   @JsonIgnore
   private String UID;
-  private boolean isNative;
+  private Boolean linuxNative;
   private String name;
   
   //
@@ -28,21 +28,21 @@ public class Game {
   //
   public Game () {
     this.UID = UUID.randomUUID().toString();
-  };
+  }
 
-  public Game(int currentRating, long numOfReports, List<String> tags, boolean isNate, String name) {
+  public Game(int currentRating, long numOfReports, List<String> tags, boolean linuxNative, String name) {
     this();
     this.currentRating = currentRating;
     this.numOfReports = numOfReports;
     this.tags = tags;
-    this.isNative = isNate;
+    this.linuxNative = linuxNative;
     this.name = name;
   }
 
-  public Game(String name, boolean isNative, List<String> tags) {
+  public Game(String name, boolean linuxNative, List<String> tags) {
     this();
     this.name = name;
-    this.isNative = isNative;
+    this.linuxNative = linuxNative;
     this.tags = tags;
     numOfReports = 0;
     currentRating = 0;
@@ -119,24 +119,20 @@ public class Game {
     this.UID = uid;
   }
 
-  public boolean isNative() {
-    return isNative;
-  }
-
   /**
    * Set the value of isNative
    * @param newVar the new value of isNative
    */
-  public void setIsNative (boolean newVar) {
-    isNative = newVar;
+  public void setLinuxNative(boolean newVar) {
+    linuxNative = newVar;
   }
 
   /**
    * Get the value of isNative
    * @return the value of isNative
    */
-  public boolean getIsNative () {
-    return isNative;
+  public boolean getLinuxNative() {
+    return linuxNative;
   }
 
   /**
@@ -167,7 +163,7 @@ public class Game {
             ", numOfReports=" + numOfReports +
             ", tags=" + tags +
             ", UID='" + UID + '\'' +
-            ", isNative=" + isNative +
+            ", isNative=" + linuxNative +
             ", name='" + name + '\'' +
             '}';
   }

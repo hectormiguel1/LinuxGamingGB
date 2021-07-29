@@ -27,7 +27,8 @@ public class ExceptionManager {
      */
     @ExceptionHandler({
             InvalidTokenException.class,
-            TokenNotFoundException.class})
+            TokenNotFoundException.class,
+            OperationNotAllowedException.class})
     public ResponseEntity<Object> handleTokenExceptions(Exception exception) {
         return new ResponseEntity<>(
                 exception.getMessage(), HttpStatus.UNAUTHORIZED
@@ -100,6 +101,18 @@ public class ExceptionManager {
     @ExceptionHandler({InterruptedException.class, ExecutionException.class})
     public void handleDBExceptions(Exception ex) {
         logger.error(ex.getMessage());
+    }
+
+    /**
+     * Handles events where the user is not found in database.
+     * @param ex Exception to handle
+     * @return Response Entity displaying error message.
+     */
+    @ExceptionHandler({UserDoesNotExistException.class})
+    public ResponseEntity<Object> handleUserDoesNotExist(Exception ex) {
+        return new ResponseEntity<>(
+                ex.getMessage(), HttpStatus.NOT_FOUND
+        );
     }
 
 

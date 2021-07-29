@@ -24,13 +24,13 @@ import java.util.concurrent.ExecutionException;
 public class UserController {
 
   private final UserService userService;
-  private final Logger logger = LoggerFactory.getLogger(UserController.class);
+  private final static Logger logger = LoggerFactory.getLogger(UserController.class);
 
   @Autowired
-  public UserController (UserService userService, TokenService tokenService) {
+  public UserController (UserService userService) {
     this.userService = userService;
     logger.info("User Controller: UP");
-  };
+  }
 
   /**
    * Function used to authenticate a newUser.

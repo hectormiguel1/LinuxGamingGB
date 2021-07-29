@@ -57,7 +57,6 @@ public class AuthToken {
         return "AuthToken{" +
                 "expires=" + expires +
                 ", token=" + token +
-                ", isValid=" + getIsValid() +
                 ", AccessLevel=" + this.accessLevel +
                 '}';
     }

@@ -10,3 +10,7 @@ target/classes/src/*
 target/classes/src
 
 *.class
+
+*.jks
+*.p12
+

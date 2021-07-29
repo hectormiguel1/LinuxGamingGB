@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import src.Exceptions.Auth.UserAlreadyExistsException;
+import src.Exceptions.Auth.UserDoesNotExistException;
 import src.Exceptions.Auth.UserNotFoundException;
 import src.Exceptions.Auth.EmailPasswordMismatchException;
 import src.Exceptions.Data.GameAlreadyExistsException;
@@ -25,6 +26,7 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.concurrent.ExecutionException;
 
 
@@ -34,7 +36,9 @@ import java.util.concurrent.ExecutionException;
 @Service
 public class StorageService {
 
-    private final String PathToServiceAccountCredentials = "src/main/resources/backend-service-account.json";
+    private final static String PathToServiceAccountCredentials = "src/main/resources/backend-service-account.json";
+    private final static Logger logger = LoggerFactory.getLogger(StorageService.class);
+
 
     private final String UserCollection = "Users";
     private final String GameCollection = "Games";
@@ -44,7 +48,6 @@ public class StorageService {
     //
     // Fields
     //
-    private final Logger logger = LoggerFactory.getLogger(StorageService.class);
     private Firestore persistentDB;
     //
     // Constructors
@@ -85,12 +88,12 @@ public class StorageService {
             throw new UserAlreadyExistsException(newUser);
         }
         //Otherwise make request for the newUser to be stored in the db and wait for response from db.
-        var response = persistentDB.collection(UserCollection).document(newUser.getUID().toString()).set(newUser).get();
+        var response = persistentDB.collection(UserCollection).document(newUser.getUID()).set(newUser).get();
 
         logger.info("Wrote new newUser, operation was completed on: " + response.getUpdateTime());
 
         //Return the new newUser stored on the db.
-        return persistentDB.collection(UserCollection).document(newUser.getUID().toString()).get().get().toObject(User.class);
+        return persistentDB.collection(UserCollection).document(newUser.getUID()).get().get().toObject(User.class);
     }
 
     /**
@@ -132,7 +135,7 @@ public class StorageService {
      * @throws InterruptedException: Thrown when the connection to DB is interrupted.
      */
     public Boolean addReport(Report newReport) throws ExecutionException, InterruptedException {
-        var reportDocument = persistentDB.collection(ReportCollection).document(newReport.getUID().toString());
+        var reportDocument = persistentDB.collection(ReportCollection).document(newReport.getUID());
         var response = reportDocument.set(newReport).get();
         logger.info("Added new report for game: " + newReport.getGameUID() + ", report UID: " + newReport.getUID());
         return true;
@@ -166,8 +169,8 @@ public class StorageService {
         if(dbResponse.size() > 0) {
             throw new GameAlreadyExistsException(newGame);
         }
-        var writeResponse = persistentDB.collection(GameCollection).document(newGame.getUID().toString()).set(newGame).get();
-        logger.info("New Game: " + newGame.getUID().toString() + " added");
+        var writeResponse = persistentDB.collection(GameCollection).document(newGame.getUID()).set(newGame).get();
+        logger.info("New Game: " + newGame.getUID() + " added");
         return true;
     }
 
@@ -185,7 +188,7 @@ public class StorageService {
         for(var document: dbResponse) {
             Game game = document.get().get().toObject(Game.class);
             assert game != null;
-            if(game.getName().contains(queryString)) {
+            if(game.getName().toLowerCase().contains(queryString.toLowerCase())) {
                 foundGames.add(game);
             }
         }
@@ -207,6 +210,22 @@ public class StorageService {
         } else {
             throw new GameNotFoundException(gameUID);
         }
+    }
+
+    /**
+     * Validates that the provided user exists in the database.
+     * @param userUID User UID to validate
+     * @return true if the user exists, Exceptions are thrown otherwise.
+     * @throws ExecutionException When connection to database fails.
+     * @throws InterruptedException When connection to DB is interrupted.
+     * @throws UserDoesNotExistException When the desired user does not exist.
+     */
+    public Boolean validateUserExists(String userUID) throws ExecutionException, InterruptedException, UserDoesNotExistException {
+        var dbResponse = persistentDB.collection(UserCollection).document(userUID).get().get();
+        if(dbResponse.exists()) {
+            return true;
+        }
+        throw new UserDoesNotExistException(userUID);
     }
 
 
